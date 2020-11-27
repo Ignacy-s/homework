@@ -1,0 +1,33 @@
+Fri 27 Nov 2020 11:11:43 PM CET
+Homework for a Gniezno Tech Highschool student.
+
+Solving first 7 exercises to show how to write basic scripts.
+
+* Napisać skrypt wyświetlający zawartość katalogu podanego jako pierwszy parameter wywołania. Jeśli parametr nie zostanie podany, należy wyświetlić informacje o poprawnej składni polecenia.
+
+** Komentarz:
+Polecenie nawiązuje do dobrej praktyki informowania użytkownika
+błędnie używającego naszego programu o tym jak powinien go prawidłowo
+wywołać. Powinien przypominać wyniki zwykłych bashowych komend gdy
+podamy im złe dane. Spróbuj wpisać `cp` bez argumentów i zobacz co
+pokazuje:
+
+#+BEGIN_SRC bash
+igi@dragon:~/Coding/praca_domowa/gniezno$ cp
+cp: missing file operand
+Try 'cp --help' for more information.
+#+END_SRC
+
+** Wymagane rozdziały z instrukcji:
+
+Wymagane informacje teoretycznie znajdują się w instrukcji, ale
+brakuje w niej listy podstawowych komend i przykładów ich
+użycia. Można odgadnąć z rozdziału drugiego, że `ls -la` służy do
+wyświetlania zawartości katalogów.
+
+Poza tym 2. polecenie echo, 4. $# - specjalny parametr zawierający
+listę argumentów aktualnie działającego (naszego) skryptu, 8. if -
+składnia użycia ifa w bashu.
+
+** Jak ulepszyć skrypt:
+*** Sprawdzić, czy $1 jest directory.
