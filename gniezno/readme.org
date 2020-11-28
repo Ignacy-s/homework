@@ -1,9 +1,9 @@
 Fri 27 Nov 2020 11:11:43 PM CET
-Homework for a Gniezno Tech Highschool student.
+Homework for a Gniezno Tech Highschool student, who asked for help.
 
-Solving first 7 exercises to show how to write basic scripts.
+Solving first 7 exercises to show how to write basic scripts in bash.
 
-* Napisać skrypt wyświetlający zawartość katalogu podanego jako pierwszy parameter wywołania. Jeśli parametr nie zostanie podany, należy wyświetlić informacje o poprawnej składni polecenia.
+* 1. Napisać skrypt wyświetlający zawartość katalogu podanego jako pierwszy parameter wywołania. Jeśli parametr nie zostanie podany, należy wyświetlić informacje o poprawnej składni polecenia.
 
 ** Komentarz:
 Polecenie nawiązuje do dobrej praktyki informowania użytkownika
@@ -139,4 +139,76 @@ składnia użycia ifa w bashu.
   ## `[[`, `[` tak naprawdę nie był funkcją wbudowaną basha, a osobnym
   ## programem o nazwie `test` i dalej możesz go użyć jeśli chcesz.
     exit 0
+#+END_SRC
+* 2. Napisz skrypt wyświetlający w kolejnych liniach argumenty przekazane do skryptu. Skrypt napisać w trzech wariantach: pierwszy z wykorzystaniem pętli for, drugi – pętli while i trzeci – petli until.
+
+** Komentarz:
+Zadanie z pętlami. Dwa różne podejścia do pętli. Pierwsze (for), gdy z
+góry wiemy na czym mamy operować. Drugie (while), gdy chcemy naszej
+pętli podawać dane po kroku. Trzecia pętla (until) jest wariantem
+while gdzie warunek jest zanegowany (!), czyli kolejny krok wykonuje
+się tak długo jak warunek jest fałszywy.
+
+** Wymagane rozdziały z instrukcji:
+4. parametry wywołania $1,$2...
+4. polecenie `shift`: Parametry $1 ... $9 można przesuwać w lewo za
+   pomocą polecenia shift. Po wydaniu tego polecenia parametr $1
+   przyjmie wartość parametru $2, $2 będzie miał wartość parametru $3,
+   ..., $8 będzie maił wartość parametru $9, a $9 będzie miał wartość
+   pustą.
+4. $@ - wypisanie wszystkich parametrów przekazanych do skryptu.
+
+** Co robi skrypt krok po kroku:
+*** for
+#+BEGIN_SRC bash
+  # A for loop operating on all arguments expanded with $@.
+  for i in "$@"; do
+  ## for tworzy zmienną o nazwie i (nazwa może być dowolna, najczęściej
+  ## używa się i oraz j jako iteratorów), zmienna ta jest dostępna
+  ## wewnątrz pętli i przy każdym odpaleniu pętli jej zawartość jest
+  ## wypełniana następnym elementem z listy obiektów. 
+
+  ## "$@" (cudzysłów bardzo ważny!!) jest magicznym parametrem. W jego
+  ## miejsce bash podstawi wszystkie argumenty skryptu. Podobne
+  ## działanie ma "$*", jednak "$@" ma tę zaletę, że każdy z parametrów
+  ## zostanie oddzielnie umieszczony w cudzysłowie, co pozwoli uniknąć
+  ## dodatkowej zabawy dostarczonej automatycznie przez bash w momencie
+  ## użycia argumentów zawierających spację (tj. argumenty ze spacją w
+  ## środku jak np nazwy folderów, nie zostaną rozdzielone na więcej
+  ## argumentów bo spacja będzie potraktowana tak jak część nazwy a nie
+  ## odstęp między kolejnymi argumentami).
+
+  ## ; jest znakiem końca linii. np linijka: echo 1; echo 2; echo 3; to
+  ## tak naprawdę 3 linijki dla basha. Dzięki ; możemy umieścić w tej
+  ## samej linii coś, co według zasad składni basha powinno znajdować
+  ## się w linii następnej, jak na przykład słowa kluczowe oznaczające
+  ## początek i koniec loopa. Średnika można nie pisac, ale wtedy do
+  ## powinno znajdować się w natępnej linii. Czasem rzeczy można robić
+  ## na kilka sposobów. Ważne, by być konsekwentnym i przynajmniej w
+  ## obrębie tego samego skryptu robić rzeczy w ten sam sposób. Pomaga
+  ## to w czytelności, co jest bardzo ważne. Skrypty bashowe można
+  ## zastąpić szybciej wykonującym się programem, ale tu ważniejsza od
+  ## czasu jest możliwość łatwego zrozumienia kodu i łatwej modyfikacji.
+    echo "$i"
+    ## w tym wypadku echo za każdym razem wypisze inną treść, bo przy
+    ## każdym okrążeniu pętli `i` będzie zawierało inną wartość.
+  done
+#+END_SRC
+
+*** while/until
+#+BEGIN_SRC bash
+  # Until loop until there are not arguments left.
+  until [[ $# -eq 0 ]]; do
+  ## Pętla while/until ma inną formę. Na jej początku znajduje się
+  ## wyrażenie logiczne, które jest ewaluowane za każdym razem gdy ma
+  ## zacząć się następne okrążenie pętli. Jeżeli wyrażenie logiczne
+  ## zanegujemy przy użyciu '!', to pętla while zmieni się w until i
+  ## vice versa. `while [[ $# -eq 0 ]]` to to samo co 'until [[ ! ( $#
+  ## -eq 0 ) ]]`. Prawdopodobnie tak samo zadziała bez nawiasów.
+    echo "$1"
+    shift
+    ## W pętli while/until sami musimy zadbać o zmianę zawartości
+    ## zmiennej na miejscu $1. Shift usuwa $1 i na jego miejsce wstawia
+    ## $2, na miejsce $2 wstawia $3 itd.
+  done
 #+END_SRC
