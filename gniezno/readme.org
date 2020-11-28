@@ -31,3 +31,112 @@ składnia użycia ifa w bashu.
 
 ** Jak ulepszyć skrypt:
 *** Sprawdzić, czy $1 jest directory.
+** Co robi skrypt krok po kroku:
+#+BEGIN_SRC bash
+    #!/bin/bash
+    ## Mówi systemowi jakiego interpretera użyć do odpalania skryptu, czyli
+    ## że jest to skrypt bashowy. W przypadku skryptu pythonowego
+    ## zastąpilibyśmy bash python3'em. (chyba tak, może python być gdzieś
+    ## indziej, bo /bin/bash to po prostu ścieżka do pliku wykonującego ).
+    ## 
+    ## Musi być na początku każdego skryptu.
+
+    ## Na początku każdego skryptu powinna się znajdować data stworzenia,
+    ## edycji, autor i cel skryptu. Po odstępie można dokładniej opisać
+    ## działanie skryptu, tutaj działanie ładnie opisane jest przez treść
+    ## polecenia zadania.
+
+    # Napisać skrypt wyświetlający zawartość katalogu podanego jako
+    # pierwszy parameter wywołania. Jeśli parametr nie zostanie podany,
+    # należy wyświetlić informacje o poprawnej składni polecenia.
+
+
+    # Check if there is at least one argument.
+    ## Skrypt powinien zawierać komentarze mówiące co aktualnie robi,
+    ## dostosowane do poziomu piszącego i odbiorcy. Skrypt pisany dla
+    ## kogoś nowego powinien tłumaczyć trochę więcej, żeby odbiorca nie
+    ## miał problemów ze zrozumieniem tego co skrypt robi. Dobrą praktyką
+    ## jest założenie, że odbiorca jest inteligentny i kompetentny, wtedy
+    ## komentarzy byłoby znacznie mniej.
+    if [[ $# -gt 0 ]]; then
+    ## instrukcja warunkowa if. Po ifie może znajdować się nie tylko
+    ## wyrażenie logiczne w formie testu, jak wyżej, ale także komenda. Na
+    ## przykład, żeby wykonać coś tylko jeżeli nie możemy spingować
+    ## 8.8.8.8 napiszemy `if ! ping 8.8.8.8; then` bo ping zwróci
+    ## "fałszywą" odpowiedź, a "!" to odwróci, więc warunek będzie
+    ## spełniony gdy ping zwróci coś innego niż 0. Programy zwracają 0
+    ## jeśli się dobrze wykonają.  [[ - w bashu powinniśmy używać [[ bo to
+    ## ulepszony [ i ma trochę więcej opcji. Do porównywania liczb używamy
+    ## "-gt" (greater), a nie ">", jak przypomniał mi shellcheck.
+      # Run ls with -la options to show what's in $1
+      ls -la "$1" || {
+      ## Do tego punktu dojdziemy tylko jeżeli skrypt dostał
+      ## przynajmniej jeden argument. Wtedy nie sprawdzając czy argument
+      ## jest jakąś lokalizacją czy czymś innym odpalamy na nim ls. Po
+      ## ls są parametry -la. W skróconej formie (po jednym -) parametry
+      ## mogą być łączone (wszystko łącznie z tylko pierwszym
+      ## poprzedonym minusem), o ile nie mają argumentów. Parametr,
+      ## który musi mieć argument może wystąpić jako ostatni.  "$1" każe
+      ## bashowi wstawić w to miejsce treść zmiennej o nazwie 1, która
+      ## jest pierwszym argumentem skryptu. Shellcheck słusznie kazał
+      ## wziąć $1 w nawias, bo gdyby argument zawierał spację, to bash
+      ## podzieliłby go przed podaniem ls. I wtedy zamiast sprawdzić
+      ## zawartość lokalizacji zawierającą w nazwie spację, sprawdziłby
+      ## kilka lokalizacji. Używanie cudzysłowów w bashu w celu
+      ## zapobiegania rozczłonkowywaniu argumentów jest bardzo ważne, aż
+      ## tak ważne, że shellcheck zwraca żółty a nie zielony
+      ## błąd. Program się raczej uruchomi, ale jego skutki są nie do
+      ## przewidzenia bez cudzysłowa.
+	echo \
+	##
+	  "Błąd ls. Czy na pewno podałeś prawidłową lokalizację?"
+	exit 1
+	## exit kończy działanie programu. Możesz przeczytać dłuższy opis
+	## exit wpisując `help exit` w konsoli:
+	## $ help exit
+	## exit: exit [n]
+	##    Exit the shell.
+	##    
+	##    Exits the shell with a status of N.  If N is omitted, the
+	##    exit status is that of the last command executed.  To
+	##    znaczy, że exit nie tylko kończy działanie skryptu, ale
+	##    jeszcze zwraca tzw. exit code, którego możemy użyć żeby
+	##    sprawdzić czy skrypt wykonał się poprawnie. Żeby sprawdzić
+	##    jaki był exit code ostatniej komendy napiszemy w konsoli
+	##    `echo $?`. W tym wypadku miał miejsce błąd, bo ls zwróciło
+	##    coś innego niż 0. Dzięki temu, że ls zwraca coś w zależności
+	##    od tego jak mu poszło możemy zareagować. Gdyby zamienić ||
+	##    na &&, to kod po && uruchomiłby się tylko, jeżeli poprzednia
+	##    komenda zakończyła się sukcesem.
+      }
+	# If ls returns an error, inform the user.  || means to run what's
+	# after || only if the thing before fails.  \ backslash makes the
+	# line continue into the next line. This way we can put echo and
+	# it's message in separate lines and keep the script more readable
+	# by not exceeding the standard 80 characters width.
+	# { starts a codeblock. In this case || would normally allow only
+	# one line to execute if ls fails. We want to execute two lines,
+	# so we have to put them in a code block. This will make both of
+	# them execute if ls fails.
+    else
+      # Less than 1 argument given to the script.
+      echo "Podaj chociaz jeden argument będący lokalizacją."
+      exit 1
+    fi
+
+  ## Jeżeli tutaj doszliśmy, to znaczy, że skrypt wykonał się
+  ## pomyślnie. Teoretycznie nie musimy pisać tego 0, gdyż bez niego
+  ## zwrócony byłby $? wynik ls, który musiał byc pozytywny, bo inaczej
+  ## zadziałałby komunikat o błędzie. Używanie || po komendach w
+  ## skrypcie to najlepszy sposób na reagowanie na błędy. Co jeżeli
+  ## chciałeś utworzyć nowy folder w folderze domowym, ale ci się nie
+  ## udało i skrypt zamiast przerwać, zacznie robić to co miał robić w
+  ## tym nowym folderze, ale w twoim folderze domowym, potencjalnie
+  ## kasując ważne dane? Innym akceptowalnym sposobem jest `if [[ $? -ne
+  ## 0]]; then komendy` albo samo `[[ $? -ne 0 ]] && komendy`, bo
+  ## przecież `[[` tak naprawdę działa tak, że zwraca 0 lub 1 w
+  ## zależności od tego czy warunek logiczny został spełniony. Stary
+  ## `[[`, `[` tak naprawdę nie był funkcją wbudowaną basha, a osobnym
+  ## programem o nazwie `test` i dalej możesz go użyć jeśli chcesz.
+    exit 0
+#+END_SRC
