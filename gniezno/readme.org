@@ -197,18 +197,21 @@ się tak długo jak warunek jest fałszywy.
 
 *** while/until
 #+BEGIN_SRC bash
-  # Until loop until there are not arguments left.
-  until [[ $# -eq 0 ]]; do
-  ## Pętla while/until ma inną formę. Na jej początku znajduje się
-  ## wyrażenie logiczne, które jest ewaluowane za każdym razem gdy ma
-  ## zacząć się następne okrążenie pętli. Jeżeli wyrażenie logiczne
-  ## zanegujemy przy użyciu '!', to pętla while zmieni się w until i
-  ## vice versa. `while [[ $# -eq 0 ]]` to to samo co 'until [[ ! ( $#
-  ## -eq 0 ) ]]`. Prawdopodobnie tak samo zadziała bez nawiasów.
-    echo "$1"
-    shift
-    ## W pętli while/until sami musimy zadbać o zmianę zawartości
-    ## zmiennej na miejscu $1. Shift usuwa $1 i na jego miejsce wstawia
-    ## $2, na miejsce $2 wstawia $3 itd.
-  done
-#+END_SRC
+    # Until loop until there are not arguments left.
+    until [[ $# -eq 0 ]]; do
+    ## Pętla while/until ma inną formę. Na jej początku znajduje się
+    ## wyrażenie logiczne, które jest ewaluowane za każdym razem gdy ma
+    ## zacząć się następne okrążenie pętli. Jeżeli wyrażenie logiczne
+    ## zanegujemy przy użyciu '!', to pętla while zmieni się w until i
+    ## vice versa. `while [[ $# -eq 0 ]]` to to samo co 'until [[ ! ( $#
+    ## -eq 0 ) ]]`. Prawdopodobnie tak samo zadziała bez nawiasów.
+      echo "$1"
+      shift
+      ## W pętli while/until sami musimy zadbać o zmianę zawartości
+      ## zmiennej na miejscu $1. Shift usuwa $1 i na jego miejsce wstawia
+      ## $2, na miejsce $2 wstawia $3 itd.
+    done
+ #+END_SRC
+
+
+* 3. 
