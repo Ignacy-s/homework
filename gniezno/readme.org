@@ -223,3 +223,4 @@ wyświetlamy komunikat o błędzie.
 ** Wymagane rozdziały z instrukcji:
 pętla, if (czy plik istnieje), liczba argumentow $#, echo
 
+
