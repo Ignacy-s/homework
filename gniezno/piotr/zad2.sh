@@ -21,6 +21,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Petla until dopoki liczba argumentow nie jest rowna 0.
+# Blad, nie wykonuje sie, bo usunelismy juz parametry.
 until [[ $# -eq 0 ]]; do
   echo "$1"
   shift
