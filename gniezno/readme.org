@@ -224,3 +224,9 @@ wyświetlamy komunikat o błędzie.
 pętla, if (czy plik istnieje), liczba argumentow $#, echo
 
 
+
+* 15. Przetestuj działanie i możliwości zastosowania polecenia dialog. Zastosuj program w trzech dowolnych skryptach.
+
+To polecenie nie jest normalnie zainstalowane na systemie.
+
+
