@@ -19,12 +19,12 @@ until [[ $# -eq 0 ]]; do
   # Sprawdzamy czy plik nie istnieje.
   if [[ ! -a "$1" ]]; then
     # Jeśli plik nie istnieje.
-    echo „Lista podanych plików jest niekompletna”
+    echo "Lista podanych plików jest niekompletna"
     exit 1
   fi
   shift
 done
 
 # Pętla nie wykryla braku zadnego pliku, wiec wszystkie istnieja.
-echo „Wszystkie podane przez Ciebie pliki istnieją”
+echo "Wszystkie podane przez Ciebie pliki istnieją"
 exit 0
