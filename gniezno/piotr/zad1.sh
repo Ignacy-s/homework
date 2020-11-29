@@ -7,8 +7,7 @@
 # pierwszy parametr wywołania. Jeśli parametr nie zostanie podany
 # należy wyświetlić informacje o poprawnej składni polecenia.
 
-
-# Sprawdz czy jest wiecej niz 0 parametrow
+# Sprawdz czy jest przynajmniej jeden parametr.
 if [[ $# -ge 1 ]]; then
   ls  -la  "$1"
 else
