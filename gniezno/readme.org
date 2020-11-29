@@ -214,4 +214,12 @@ się tak długo jak warunek jest fałszywy.
  #+END_SRC
 
 
-* 3. 
+* 3. Wyświetl zawartość plików podanych jako kolejne parametry wywołania pod warunkiem że pliki te istnieją. Jeśli nie został podany żaden plik należy wyświetlić komunikat: „Nie ma czego wyświetlać”. Treści plików należy rozdzielić linią składającą się z samych gwiazdek.
+
+Wiemy już jak użyć pętli. Wyswietlamy pliki pod jakims warunkiem, wiec
+trzeba będzie coś sprawdzić ifem. Jezeli nie ma argumentów, to
+wyświetlamy komunikat o błędzie.
+
+** Wymagane rozdziały z instrukcji:
+pętla, if (czy plik istnieje), liczba argumentow $#, echo
+
