@@ -62,11 +62,59 @@
 # częscią nazwy. Na wszelki wypadek przy sprawdzaniu czy nazwa jest
 # palindromem jednak usuniemy część nazwy która jest rozszerzeniem.
 
-set +x
+#set -x
+# set -x sprawi, że w czasie wykonywania skryptu dowiemy się o
+# wszystkim co robi skrypt, nawet o wykonanych komendach, które
+# normalnie nic nie wypisują na ekran. Przydaje się w czasie
+# testowania skryptu, żeby wiedzieć co poszło nie tak.
 
 ROOT_DIR="$1"
 
-echo "Root dir is: $ROOT_DIR"
+# Exit on fail.
+die(){
+  # Funkcja die to sposób w jaki radzimy sobie z błędami w
+  # skrypcie. Ta funkcja zwraca informacje o błędzie na STDERR i
+  # zatrzymuje działanie programu. Dzięki temu jeżeli nie uda nam się
+  # np. zmienić lokalizacji, program nie będzie dalej wykonywać się w
+  # złym miejscu, siejąc chaos i zniszczenie.
+  # Używamy jej tak: `die "Nie mozna otworzyc pliku X."`
+  
+  error_msg="${*}"
+  # "$* albo ${*} to po prostu wszystkie parametry podane do funkcji
+  # wypisane razem. Ta zmienna nie jest potrzebna, można było
+  # patametry przekazać od razu do późniejszego `echo`, ale dzięki
+  # nazwaniu ich w zmiennej przekazujemy informacje o tym co robi
+  # funkcja komuś kto ją będzie później czytał.
+  
+  echo -e "Error: $error_msg" >&2
+  # `echo` wypisuje to co dostanie jako argument/y. Opcja -e sprawi,
+  # że możemy użyć tzw. escape sequences. Ich listę można zobaczyć
+  # wpisując w konsoli `help echo`. Dzięki temu do `die` można podać
+  # string z tabami albo ze znakami nowej linii.
+  # $error_msg podstawia w swoje miejsce zawartość zmiennej
+  # error_msg.
+  # >&2 przkierowuje wyjście komendy echo. Normalnie wypisałaby na
+  # STDIN, standardowe wyjście (1), ale komunikaty o błędach konwencja
+  # nakazuje wypisywać na STDERR. STDERR to 2. >& przekierowuje
+  # wyjście na konkretny strumień, w tym wypadku strumień drugi czyli
+  # STDERR.
+  
+  echo "Exiting $0." >&2
+  # $0 to specjalny parametr, który zawiera w sobie nazwę naszego
+  # programu tak jak został wywołany. Jeżeli skrypt odpalisz
+  # ./nazwa.sh to to będzie w $0. Jeżeli miał inną nazwę, alias albo
+  # użyłeś pełnej ścieżki, to to będzie w $0. W ten sposób możemy
+  # poinformować użytkownika jaki program zamknęliśmy, nawet jeżeli
+  # nie wiemy jak program się nazywa w momencie pisania komunikatu o
+  # błędzie.
+  
+  exit 1
+  # exit 1 zamyka program (cały, nie tylko funkcję) zwracając 1, który
+  # jest kod błędu. Jeżeli ktoś użyje naszego skryptu w innym
+  # skrypcie, będzie mógł ten błąd "wychwycić" i odpowiednio
+  # zareagować, np. zamykając swój program.
+}
+
 
 # Zapisujemy zawartość pierwszego argumentu skryptu $1 jako
 # ROOT_DIR. Dzięki temu ma sensowną nazwę, której później będziemy
@@ -98,11 +146,108 @@ echo "Root dir is: $ROOT_DIR"
 
 # Pętla while będzie wykonywać się tak długo jak `read` będzie w stanie
 # wczytać nową linijkę do zmiennej o nazwie `DIR`. Tak w bashu
-# iterujemy na dłuższych listach. Read służy do takich rzeczy.
-while read DIR ; do
-  echo "$DIR"
-done < <(find "$ROOT_DIR" -maxdepth 1 -type d)
+# iterujemy na dłuższych listach. Read służy do wczytywania danych do
+# zmiennych, domyślnie czyta ze STDIN takich rzeczy. O tym jak
+# działają strumienie możesz przeczytać w
+# https://mywiki.wooledge.org/BashGuide/InputAndOutput
+# Pod hasłem File Descriptors.
 
+cd "$ROOT_DIR" \
+  || die 'cd "$ROOT_DIR"'
+
+while read DIR ; do
+# while to pętla, która działa tak długo jak wyrażenie za while jest
+# prawdziwe. Wyrażeniem może być conditional typu [[, albo
+# jakiekolwiek inne polecenie. Każde polecenie/program w bashu coś
+# zwraca. I jeżeli to co zwraca to 0 (OK) to while działa dalej, aż
+# wyjdzie coś innego niż 0.
+  cd "$DIR" \
+    || die 'cd "$DIR"'
+  GOOD_FILES=0
+  # Zmienna do pamiętania ile mamy plików spełniających warunki .exe,
+  # bycia wykonywalnym i nie bycia palindromem.
+  while read FILE_NAME; do
+    FILE_NAME="${FILE_NAME##*/}"
+    # Używamy `parameter expansion` żeby wyciąć potrzebną nam część
+    # z nazwy pliku. Najpierw FILE_NAME ma treść ./2file.exe lub
+    # ./test/2file.exe. Parameter expansion może wyciąć część
+    # zawartości parametru albo wypisać tylko jedną z jego liter albo
+    # jego długość. W przypadku # kasujemy z początku lub w przypadku
+    # % z końca to co pasuje do patternu podanego po %/#. Jeżeli
+    # użyjemy jednego #/% to kasujemy najkrótszy pasujący kawałek
+    # treści. Jeżeli ##/%% to najdłuższy. Gwiazdka `*` pasuje do
+    # wszystkiego, a po niej jest slash `/`. Czyli ${FILE_NAME##*/}
+    # znaczy "Z zawartości zmiennej FILE_NAME skasuj najdłuższy
+    # mozliwy fragment, który można opisać patternem `*/`. Czyli z
+    # pełnej ścieżki do pliku otrzymamy samą nazwę pliku. O parameter
+    # expansion możesz poczytać w Bash Wiki
+    # https://mywiki.wooledge.org/BashGuide/Parameters
+    # albo w `man bash` wyszukując ze slashem `/parameter expansion`
+    # (pamiętaj, że `n` skacze do następnego wyniku wyszukiwania). Z
+    # przykładami możesz zobaczyć to tutaj (właśnie samo wyłuskiwanie
+    # rozszerzeń itp:
+    # https://www.cyberciti.biz/faq/unix-linux-extract-filename-and-extension-in-bash/
+    
+
+    FILE_EXTENSION="${FILE_NAME##*.}"
+    # Tak jak wyżej, wycinamy wszystko przed kropką, nawet jeżeli
+    # gdzieś w nazwie pliku jest jeszcze jedna kropka (jeden #
+    # zostawiłby wszystko po pierwszej kropce, nawet jeżeli nie byłoby
+    # to rozszerzenie).
+
+    NAME_MINUS_EXT="${FILE_NAME%.$FILE_EXTENSION}"
+    # Teraz usuwamy z końca, ale tylko do pierwszej kropki. Usuwamy
+    # rozszerzenie, które właśnie odkryliśmy.
+
+    REVERSE_NAME="$( rev <<< $NAME_MINUS_EXT )"
+    # $( .. ) to Command Substitution.
+    # https://mywiki.wooledge.org/CommandSubstitution
+    # W miejsce w którym jest $() bash najpierw podstawi to co zwróci
+    # komenda w środku, a z tak uzyskanymi informacjami wykona resztę
+    # komendy, czyli przypisanie. Innymi słowy znaczy to, żeby to
+    # reverse name wpisać to co wyjdzie po wykonaniu komendy w środku.
+    # `rev` to program, który wypisze od końca każdą linijkę podanego
+    # pliku. Wymaga pliku i nie może działać ze
+    # stringiem/zmienną. Żeby go oszukać użyjemy <<< czyli
+    # HERE STRING. <<< stworzy tymczasowy plik o zawartości tego co mu
+    # podamy (czyli naszej zmiennej) i ten tymczasowy plik poda do
+    # `rev`. O HERE STRINGS i HERE DOCS poczytasz w manualu basha `man
+    # bash` `/here docs` albo w bash wiki w kawałku na temat
+    # wejścia/wyjścia 4.3 Heredocs And Herestrings:
+    # https://mywiki.wooledge.org/BashGuide/InputAndOutput
+
+    # Z tak przygotowanymi zmiennymi możemy wykonać 3 porównania, żeby
+    # sprawdzić, czy plik spełnia nasze wymagania. Używamy instrukcji
+    # warunkowej if oraz [[, z trzema połączonymi warunkami. Pomoc do
+    # nich pod `help if` oraz `help [[` oraz wewnątrz `man bash`. Sam
+    # do nich zaglądałem przy pisaniu, żeby się nie pomylić.
+    if [[ ( $FILE_EXTENSION = .exe ) \
+      # = to zwykłe porównanie stringów. O tym jakich porównań możesz
+      # użyć z [[ sprawdzisz w `help [[`.
+            && ( -x $FILE_NAME ) \
+              # linia zakończona backslashem \ się nie kończy, tylko
+              # notynuuje w następnej linijce. Dzięki temu można
+              # rozdzielić te kilka warunków na 3 linijki i zachować
+              # więcej czytelności. && służy wewnątrz [[ ]] do
+              # "łączenia" różnych warunków, logiczny `and`. || to
+              # logiczny `or`. W innej części skryptu `&&` i `||`
+              # oznaczają co innego.
+            && ( $NAME_MINUS_EXT != "$REVERSE_NAME" ) ]]; then
+      (( GOOD_FILES++))
+      # $(( to mathematical expansion. W środku $(( nie trzeba dodawać
+      # $ przed nazwami zmiennych a znaki działania wykonują
+      # działania. Gdyby przed (( był znak dolara, to w to miejsce
+      # wstawiony byłby wynik działania. My jednak nie potrzebujemy
+      # wyniku, chcemy tylko zwiększyć zawartość good files.
+    fi
+  done < <( find . -maxdepth 1 -type f)
+  if [[ $GOOD_FILES -ge 3 ]]; then
+    echo "zostało wypisać w tym miejscu ile plikow ma folde."
+  fi
+  
+  cd .. \
+    || die 'cd ..'
+done < <( find . -maxdepth 1 -type d | tail -n +2 )
 
 
 # Testowanie skryptu:
