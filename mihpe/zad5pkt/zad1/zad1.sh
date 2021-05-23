@@ -68,6 +68,16 @@
 # normalnie nic nie wypisują na ekran. Przydaje się w czasie
 # testowania skryptu, żeby wiedzieć co poszło nie tak.
 
+# Dzięki set -x np. na końcu byłem w stanie zobaczyć, że źle wpisałem
+# rozszerzenie - z kropką. I w wypisie z set -x nie wykomentowanym
+# miałem takie coś:
+# + REVERSE_NAME=elif4
+# + [[ exe = .exe ]]
+# + read FILE_NAME
+# + FILE_NAME=3filelif3.exe
+# + FILE_EXTENSION=exe
+# + NAME_MINUS_EXT=3filelif3
+# tutaj zobaczyłem, że muszę przeprawić .exe po prawej na exe.
 ROOT_DIR="$1"
 
 # Exit on fail.
@@ -221,7 +231,7 @@ while read DIR ; do
     # warunkowej if oraz [[, z trzema połączonymi warunkami. Pomoc do
     # nich pod `help if` oraz `help [[` oraz wewnątrz `man bash`. Sam
     # do nich zaglądałem przy pisaniu, żeby się nie pomylić.
-    if [[ ( $FILE_EXTENSION = .exe ) \
+    if [[ ( $FILE_EXTENSION = exe ) \
       # = to zwykłe porównanie stringów. O tym jakich porównań możesz
       # użyć z [[ sprawdzisz w `help [[`.
             && ( -x $FILE_NAME ) \
@@ -232,8 +242,10 @@ while read DIR ; do
               # "łączenia" różnych warunków, logiczny `and`. || to
               # logiczny `or`. W innej części skryptu `&&` i `||`
               # oznaczają co innego.
+              # -x to test czy plik jest wykonywalny (czy ma nadany
+              # tzw. executable bit, który można nadać `chmod +x`.   
             && ( $NAME_MINUS_EXT != "$REVERSE_NAME" ) ]]; then
-      (( GOOD_FILES++))
+      (( GOOD_FILES++ ))
       # $(( to mathematical expansion. W środku $(( nie trzeba dodawać
       # $ przed nazwami zmiennych a znaki działania wykonują
       # działania. Gdyby przed (( był znak dolara, to w to miejsce
@@ -241,8 +253,38 @@ while read DIR ; do
       # wyniku, chcemy tylko zwiększyć zawartość good files.
     fi
   done < <( find . -maxdepth 1 -type f)
+  # Tutaj przekierowujemy "plik" jako wejście do while przy użyciu <.
+  # <( ) to Process Substitution, 6.1 w
+  # https://mywiki.wooledge.org/BashGuide/InputAndOutput
+  # to coś podobnego do $( ), tylko zamiast wstawić w to miejsce wynik
+  # komendy z wnętrza nawiasów, <( ) tworzy plik tymczasowy z tą
+  # zawartością. Pomaga w sytuacjach, kiedy jakaś komenda jako
+  # parametr potrzebuje plik a nie stringa (tak jak np z rev.)
+
   if [[ $GOOD_FILES -ge 3 ]]; then
-    echo "zostało wypisać w tym miejscu ile plikow ma folde."
+    # Porównywanie stringów robimy z = i !=, a liczb używając -lt -gt
+    # -ge itp. Patrz: `help [[`.
+
+    FILE_COUNT=$( find . -type f -maxdepth 1 | wc -l )
+    # Puszczamy find w naszej lokalizacji (. oznacza tu gdzie
+    # jesteśmy), szukamy rzeczy typu f, czyli file - plików. Maxdepth
+    # 1, żeby pokazało tylko pliki w aktualnym folderze.
+    # | oznacza "weź wyjście z poprzedniej komendy i podaj jako
+    # wejście do następnej.
+    # `wc` to program liczący słowa w plikach. `man wc` powie więcej,
+    # ale w skrócie możemy policzyć słowa, linie, bajty. W tym wypadku
+    # opcja `-l` każe wc liczyć linie. find wypisze ścieżkę każdego
+    # pliku znalezionego w aktualnym folderze, więc jeżeli policzymy
+    # linie wychodzące z finda, to dostaniemy liczbę plików w
+    # folderze.
+    
+    echo "${DIR##*/}: ${FILE_COUNT}"
+    # Gdyby nie nawias klamrowy w `${DIR}:` to mielibyśmy
+    # $DIR: i bash nie wiedziałby co to znaczy. Jeżeli zaraz po
+    # zmiennej chcemy wypisać coś innego, np. kropkę albo inną treść,
+    # to nazwę zmiennej wstawiamy w klamerki. Wtedy zaraz po klamerki
+    # można dodać coś innego co w wyjściu po podstawieniu zmiennej
+    # będzie od razu po wartości zmiennej.
   fi
   
   cd .. \
@@ -251,5 +293,17 @@ done < <( find . -maxdepth 1 -type d | tail -n +2 )
 
 
 # Testowanie skryptu:
+# Ta linijka stworzy nam w aktualnej lokalizacji małe poletko do testów:
 # for ((i=1;i<6;i++)) ; do cd ${i}dir; for (( x=1 ; x<6 ; x++)) ; do touch ${x}file; if [[ $i -lt $x ]]; then chmod +x ${x}file; fi; done; cd .. ; done;
-# Ta linijka stworzy nam w aktualnej lokalizacji małe poletko do testów.
+# W wersji ze znakami nowej linii:
+# for (( i=1 ; i<6 ; i++ )) ; do
+#   cd ${i}dir
+#   for (( x=1 ; x<6 ; x++)) ; do
+#     touch ${x}file
+#     if [[ $i -lt $x ]]; then
+#       chmod +x ${x}file
+#     fi
+#   done
+#   cd ..
+# done
+
